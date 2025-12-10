@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI 智练</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Helvetica', sans-serif;
+        }
+
+        /* 视频层：默认隐藏，全屏显示 */
+        #camera-feed {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 保证画面填满屏幕不变形 */
+            z-index: 50; /* 在按钮之下，激活后在背景层 */
+            display: none; /* 初始隐藏 */
+            transform: scaleX(-1); /* 镜像翻转，像照镜子一样 */
+        }
+
+        .start-btn {
+            width: 80px;
+            height: 80px;
+            background-color: #000;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 15%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: all 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+            animation: breathe 3s infinite ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            letter-spacing: 1px;
+            z-index: 100;
+            cursor: pointer;
+            /* 禁止手机上的点击高亮背景 */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+            50% { transform: scale(1.1); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+        }
+
+        .start-btn.active {
+            bottom: 50%;
+            transform: scale(30); 
+            pointer-events: none; /* 放大后不再响应点击 */
+        }
+        
+        .start-btn.active span { opacity: 0; }
+
+        /* 模拟的骨骼线 UI (装饰用) */
+        .overlay-ui {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 101;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s 0.5s;
+            border: 4px solid transparent; /* 预留给红/蓝光效 */
+        }
+        
+        .active ~ .overlay-ui { opacity: 1; }
+
+        .status-text {
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <video id="camera-feed" autoplay playsinline></video>
+
+    <div class="start-btn" id="orb">
+        <span>GO</span>
+    </div>
+
+    <div class="overlay-ui">
+        <div class="status-text">AI VISION ACTIVE</div>
+    </div>
+
+    <script>
+        const orb = document.getElementById('orb');
+        const video = document.getElementById('camera-feed');
+
+        orb.addEventListener('click', async () => {
+            // 1. 先尝试获取摄像头权限 (用户体验关键：先请求权限，再做动画)
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: "user", // 优先使用前置摄像头
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }, 
+                    audio: false 
+                });
+                
+                // 2. 权限通过，开始播放画面
+                video.srcObject = stream;
+                video.style.display = 'block';
+
+                // 3. 触发液化动画
+                orb.classList.add('active');
+
+            } catch (err) {
+                console.error("摄像头启动失败:", err);
+                alert("请允许访问摄像头以开始训练！");
+            }
+        });
+    </script>
+</body>
+</html>
